@@ -11,7 +11,7 @@ describe "Firefly" do
     end
 
     it "should redirect when invalid parameters" do
-      post '/api/set', { "api_key" => "not_the_right_key"}
+      post '/login', { "api_key" => "not_the_right_key"}
 
       get '/'
       last_response.should be_redirect
@@ -21,7 +21,7 @@ describe "Firefly" do
     end
 
     it "should be able to login" do
-      post '/api/set', { "api_key" => "test"}
+      post '/login', { "api_key" => "test"}
       follow_redirect!
       last_response.should be_ok
 

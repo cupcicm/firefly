@@ -3,7 +3,7 @@
 %p
   Please enter your API key below to make sure only you can shorten URLs here.
 
-%form{ action: '/api/set', method: 'post' }
+%form{ action: 'login', method: 'post' }
   %p
     %label{ for: 'api_key' } API Key
     %input{ type: 'password', name: 'api_key', id: 'api_key' }

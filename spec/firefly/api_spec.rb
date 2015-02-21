@@ -82,12 +82,14 @@ describe "API" do
 
       it "should return a 401 on a wrong API key" do
         self.send verb, '/api/add', url: 'http://example.org', api_key: 'false'
-        last_response.status.should eql(401)
+        follow_redirect!
+        last_response.body.should include 'Please enter '
       end
 
       it "should not return a shortened URL on 401" do
         self.send verb, '/api/add', url: 'http://example.org', api_key: 'false'
-        last_response.body.should match(/Permission denied: Invalid API key/)
+        follow_redirect!
+        last_response.body.should include 'Please enter '
       end
 
       it "should create a new Firefly::Url" do
@@ -139,7 +141,10 @@ describe "API" do
 
     it "should validate API permissions" do
       get '/api/info/alpha', api_key: false
-      last_response.status.should be(401)
+      last_response.should be_redirect
+      follow_redirect!
+      last_response.should be_ok
+      last_request.url.should include '/login'
     end
   end
 

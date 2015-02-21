@@ -3,6 +3,7 @@ require 'sinatra/base'
 require 'haml'
 require 'digest/md5'
 require 'warden'
+require_relative 'auth'
 
 module Firefly
   class InvalidUrlError < StandardError
@@ -13,6 +14,16 @@ module Firefly
 
   class Server < Sinatra::Base
     enable :sessions
+
+    # Read https://github.com/sklise/sinatra-warden-example for more details
+    use Warden::Manager do |config|
+
+      config.scope_defaults :default,
+                            strategies: [:api_key],
+                            # redirect to /login when not authenticated
+                            action: 'redirect_login'
+      config.failure_app = self
+    end
 
     if Firefly.environment == "development"
       enable :logging, :dump_errors, :raise_errors
@@ -58,20 +69,6 @@ module Firefly
         (chars.length > length ? chars[0...stop] + options[:omission] : text).to_s
       end
 
-      def has_valid_api_cookie?
-        key = session["firefly_session"]
-        key == Digest::MD5.hexdigest(config[:api_key])
-      end
-
-      def validate_api_permission
-        if !has_valid_api_cookie? && params[:api_key] != config[:api_key]
-          status 401
-          return false
-        else
-          return true
-        end
-      end
-
       def short_url(url)
         "http://#{config[:hostname]}/#{url.code}"
       end
@@ -98,15 +95,9 @@ module Firefly
         @highlight == url.code
       end
 
-      def store_api_key(key)
-        if key == config[:api_key]
-          set_api_cookie(config[:api_key])
-        end
-      end
     end
 
     before do
-      @authenticated = has_valid_api_cookie?
       @config        = config
       @highlight     = nil
       @title         = "Firefly at http://#{@config[:hostname]}"
@@ -115,7 +106,7 @@ module Firefly
     end
 
     get '/' do
-      redirect '/login' if !@authenticated
+      env['warden'].authenticate!
       @highlight = Firefly::Url.where(code: params[:highlight]).first
       @error     = params[:highlight] == "error"
 
@@ -127,9 +118,22 @@ module Firefly
       haml :index
     end
 
-    post '/api/set' do
-      store_api_key(params[:api_key])
-      redirect '/'
+    post '/login' do
+      begin
+        env['warden'].authenticate!
+      ensure
+        redirect '/'
+      end
+    end
+
+    # Use an explicit redirect to the login page so that the browser is pointed
+    # back to /login.
+    get '/redirect_login' do
+      redirect '/login'
+    end
+
+    post '/redirect_login' do
+      redirect '/login'
     end
 
     get '/login' do
@@ -141,7 +145,7 @@ module Firefly
     #
     # Returns the shortened URL
     api_add = lambda {
-      validate_api_permission or return "Permission denied: Invalid API key"
+      env['warden'].authenticate!
 
       @url            = params[:url]
       @requested_code = params[:short]
@@ -149,7 +153,6 @@ module Firefly
       invalid = @code.nil?
 
       if params[:visual]
-        store_api_key(params[:api_key])
         @code.nil? ? haml(:error) : redirect("/?highlight=#{@code}")
       else
         # head(422) if invalid
@@ -165,7 +168,7 @@ module Firefly
     #
     # Show info on the URL
     get '/api/info/:code' do
-      validate_api_permission or return "Permission denied: Invalid API key"
+      env['warden'].authenticate!
 
       @url = Firefly::Url.where(code: params[:code]).first
 
@@ -217,6 +220,7 @@ module Firefly
 
       configuration_file ||= Config.DefaultConfigFile
       @config = Firefly::Config.new(configuration_file)
+      register_api_key_strategy(@config[:api_key])
 
       begin
         # TODO: Check for proper database collation with ActiveRecord
