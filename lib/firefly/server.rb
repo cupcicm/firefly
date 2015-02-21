@@ -2,6 +2,7 @@
 require 'sinatra/base'
 require 'haml'
 require 'digest/md5'
+require 'warden'
 
 module Firefly
   class InvalidUrlError < StandardError
