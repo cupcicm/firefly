@@ -2,6 +2,8 @@
 require 'sinatra/base'
 require 'haml'
 require 'digest/md5'
+require 'warden'
+require 'warden/ldap'
 
 module Firefly
   class InvalidUrlError < StandardError
@@ -13,8 +15,30 @@ module Firefly
   class Server < Sinatra::Base
     enable :sessions
 
+    Warden::Ldap.configure do |c|
+      c.config_file = 'ldap.yml'
+      c.env = 'development'
+    end
+
+    use Warden::Manager do |config|
+
+      config.scope_defaults :default,
+                            # "strategies" is an array of named methods with which to
+                            # attempt authentication. We have to define this later.
+                            strategies: [:ldap],
+                            # The action is a route to send the user to when
+                            # warden.authenticate! returns a false answer. We'll show
+                            # this route below.
+                            action: 'login'
+      # When a user tries to log in and cannot, this specifies the
+      # app to send the user to.
+      config.failure_app = self
+    end
+
+
+
     if Firefly.environment == "development"
-      enable :logging, :dump_errors, :raise_errors
+      enable :logging,:dump_errors, :raise_errors
     end
 
     # TODO: Replace this properly with Firefly.root
@@ -41,10 +65,6 @@ module Firefly
         request.env['SCRIPT_NAME']
       end
 
-      def set_api_cookie(key)
-        session["firefly_session"] = Digest::MD5.hexdigest(key)
-      end
-
       # Taken from Rails
       def truncate(text, length, options = {})
         options[:omission] ||= "..."
@@ -55,20 +75,6 @@ module Firefly
           (chars.rindex(options[:separator], length_with_room_for_omission) || length_with_room_for_omission) : length_with_room_for_omission
 
         (chars.length > length ? chars[0...stop] + options[:omission] : text).to_s
-      end
-
-      def has_valid_api_cookie?
-        key = session["firefly_session"]
-        key == Digest::MD5.hexdigest(config[:api_key])
-      end
-
-      def validate_api_permission
-        if !has_valid_api_cookie? && params[:api_key] != config[:api_key]
-          status 401
-          return false
-        else
-          return true
-        end
       end
 
       def short_url(url)
@@ -97,15 +103,9 @@ module Firefly
         @highlight == url.code
       end
 
-      def store_api_key(key)
-        if key == config[:api_key]
-          set_api_cookie(config[:api_key])
-        end
-      end
     end
 
     before do
-      @authenticated = has_valid_api_cookie?
       @config        = config
       @highlight     = nil
       @title         = "Firefly at http://#{@config[:hostname]}"
@@ -114,6 +114,7 @@ module Firefly
     end
 
     get '/' do
+      env['warden'].authenticate!
       @highlight = Firefly::Url.where(code: params[:highlight]).first
       @error     = params[:highlight] == "error"
 
@@ -125,35 +126,14 @@ module Firefly
       haml :index
     end
 
-    post '/api/set' do
-      store_api_key(params[:api_key])
-      redirect '/'
+    get '/login' do
+      haml :login
     end
 
-    # GET /add?url=http://ariejan.net&api_key=test
-    # POST /add?url=http://ariejan.net&api_key=test
-    #
-    # Returns the shortened URL
-    api_add = lambda {
-      validate_api_permission or return "Permission denied: Invalid API key"
-
-      @url            = params[:url]
-      @requested_code = params[:short]
-      @code, @result  = generate_short_url(@url, @requested_code)
-      invalid = @code.nil?
-
-      if params[:visual]
-        store_api_key(params[:api_key])
-        @code.nil? ? haml(:error) : redirect("/?highlight=#{@code}")
-      else
-        # head(422) if invalid
-        status 422 if invalid
-        @result
-      end
-    }
-
-    get '/api/add', &api_add
-    post '/api/add', &api_add
+    post '/login' do
+      env['warden'].authenticate
+      redirect '/'
+    end
 
     # GET /b3d+
     #

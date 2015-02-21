@@ -1,0 +1,19 @@
+production: &ldap_defaults
+  host: 192.168.0.13
+  base: ou=people,dc=manu,dc=com
+  root: cn=admin,dc=manu,dc=com
+  passdn: letsdoit
+  auth: true
+  generic_credentials:
+
+    username: cn=admin,dc=manu,dc=com
+    password: letsdoit
+
+  port: 389
+  attributes: uid
+
+test:
+  <<: *ldap_defaults
+
+development:
+  <<: *ldap_defaults
