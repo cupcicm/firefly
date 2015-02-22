@@ -215,7 +215,7 @@ module Firefly
     def initialize(configuration_file = nil)
       super
 
-      configuration_file ||= File.join(Firefly.root, 'config/firefly.yml')
+      configuration_file ||= Config.DefaultConfigFile
       @config = Firefly::Config.new(configuration_file)
 
       begin

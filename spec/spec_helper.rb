@@ -17,7 +17,15 @@ ActiveRecord::Base.logger = nil
 module RSpecMixin
   include Rack::Test::Methods
   def app
-    Firefly::Server.new(File.join(Firefly.root, 'spec/firefly.yml'))
+    Firefly::Server.new
+  end
+end
+
+module Firefly
+  class Config
+    def self.DefaultConfigFile
+      File.join(Firefly.root, 'spec/firefly.yml')
+    end
   end
 end
 

@@ -2,6 +2,10 @@
 module Firefly
   class Config < Hash
 
+    def self.DefaultConfigFile
+      File.join(Firefly.root, 'config/firefly.yml')
+    end
+
     DEFAULTS = {
       hostname:    "localhost:3000",
       api_key:     "test",
