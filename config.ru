@@ -1,3 +1,3 @@
 require './lib/firefly'
 
-run Firefly::Server.new
+run Firefly::Server.create

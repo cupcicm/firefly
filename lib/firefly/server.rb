@@ -15,16 +15,6 @@ module Firefly
   class Server < Sinatra::Base
     enable :sessions
 
-    # Read https://github.com/sklise/sinatra-warden-example for more details
-    use Warden::Manager do |config|
-
-      config.scope_defaults :default,
-                            strategies: [:api_key],
-                            # redirect to /login when not authenticated
-                            action: 'redirect_login'
-      config.failure_app = self
-    end
-
     if Firefly.environment == "development"
       enable :logging, :dump_errors, :raise_errors
     end
@@ -215,12 +205,15 @@ module Firefly
       end
     end
 
-    def initialize(configuration_file = nil)
+    def self.config_object(configuration_file = nil)
+      configuration_file ||= Config.DefaultConfigFile
+      Firefly::Config.new(configuration_file)
+    end
+
+    def initialize(config = nil)
       super
 
-      configuration_file ||= Config.DefaultConfigFile
-      @config = Firefly::Config.new(configuration_file)
-      register_api_key_strategy(@config[:api_key])
+      @config||= Server.config_object
 
       begin
         # TODO: Check for proper database collation with ActiveRecord
@@ -233,6 +226,22 @@ module Firefly
         puts $!.backtrace
         exit(1)
       end
+    end
+
+    # Create the Server object, and register the right warden strategy within it.
+    def self.create(configuration_file = nil)
+      config = self.config_object configuration_file
+      register_api_key_strategy(config[:api_key])
+      
+      # Read https://github.com/sklise/sinatra-warden-example for more details
+      self.use Warden::Manager do |config|
+        config.scope_defaults :default,
+                              strategies: [:api_key],
+                              # redirect to /login when not authenticated
+                              action: 'redirect_login'
+        config.failure_app = self
+      end
+      self.new(config)
     end
 
     def check_code_factory

@@ -17,7 +17,7 @@ ActiveRecord::Base.logger = nil
 module RSpecMixin
   include Rack::Test::Methods
   def app
-    Firefly::Server.new
+    Firefly::Server.create
   end
 end
 
