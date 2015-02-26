@@ -9,7 +9,11 @@ module Firefly
     DEFAULTS = {
       hostname:    "localhost:3000",
       api_key:     "test",
-      recent_urls: 25
+      recent_urls: 25,
+      authentication: {
+        strategy: 'api_key',
+        api_key: 'test'
+      }
     }
 
     def initialize configuration_file

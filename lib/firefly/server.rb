@@ -231,12 +231,15 @@ module Firefly
     # Create the Server object, and register the right warden strategy within it.
     def self.create(configuration_file = nil)
       config = self.config_object configuration_file
-      register_api_key_strategy(config[:api_key])
+      strategy = config[:authentication]['strategy'].to_sym
+      if strategy == :api_key
+        register_api_key_strategy(config[:authentication]['api_key'])
+      end
       
       # Read https://github.com/sklise/sinatra-warden-example for more details
       self.use Warden::Manager do |config|
         config.scope_defaults :default,
-                              strategies: [:api_key],
+                              strategies: [strategy],
                               # redirect to /login when not authenticated
                               action: 'redirect_login'
         config.failure_app = self
