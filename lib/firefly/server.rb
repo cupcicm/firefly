@@ -234,6 +234,8 @@ module Firefly
       strategy = config[:authentication]['strategy'].to_sym
       if strategy == :api_key
         register_api_key_strategy(config[:authentication]['api_key'])
+      elsif strategy == :ldap
+        register_ldap_strategy(config[:authentication]['config_file'])
       end
       
       # Read https://github.com/sklise/sinatra-warden-example for more details

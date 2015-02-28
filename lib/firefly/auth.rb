@@ -1,4 +1,5 @@
 require 'warden'
+require 'warden/ldap'
 
 def register_api_key_strategy(api_key)
   Warden::Strategies.add(:api_key) do
@@ -15,5 +16,12 @@ def register_api_key_strategy(api_key)
         fail!("Wrong api key")
       end
     }
+  end
+end
+
+def register_ldap_strategy(ldap_config_file)
+  Warden::Ldap.configure do |c|
+    c.config_file = ldap_config_file
+    c.env = Firefly.environment
   end
 end

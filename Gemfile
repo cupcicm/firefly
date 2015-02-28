@@ -10,6 +10,7 @@ gem 'sqlite3',  '~> 1.3'
 gem 'activerecord', "= 4.0.4"
 gem 'sinatra-activerecord', '~> 1.7'
 gem 'warden'
+gem 'warden-ldap'
 
 group :development, :test do
   gem 'rake',               '~> 10.3'
