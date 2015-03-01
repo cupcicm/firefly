@@ -1,0 +1,13 @@
+production: &ldap_defaults
+  host: ldap.example.com
+  base: ou=people,dc=example,dc=com
+  generic_credentials:
+    - cn=admin,dc=example,dc=com
+    - password
+  port: 389
+  attributes: uid
+test:
+  <<: *ldap_defaults
+
+development:
+  <<: *ldap_defaults

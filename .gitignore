@@ -12,3 +12,4 @@ config/database.yml
 config/firefly.yml
 test.db
 coverage/
+config/ldap.yml

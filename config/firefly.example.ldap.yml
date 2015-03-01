@@ -3,6 +3,6 @@ firefly:
   api_key: 'test'
   session_secret: 'change-me'
   authentication:
-    strategy: 'api_key'
-    api_key: 'test'
-    login_form: 'login'
+    strategy: 'ldap'
+    login_form: 'login_ldap'
+    config_file: 'config/ldap.yml'
