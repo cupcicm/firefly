@@ -26,7 +26,6 @@ module Firefly
     set :public_folder,  "#{dir}/public"
     set :haml,           format: :html5
     set :static,         true
-    set :session_secret, nil
 
     attr_accessor :config
 
@@ -91,8 +90,6 @@ module Firefly
       @config        = config
       @highlight     = nil
       @title         = "Firefly at http://#{@config[:hostname]}"
-
-      settings.set :session_secret, @config[:session_secret]
     end
 
     get '/' do
@@ -246,6 +243,7 @@ module Firefly
                               action: 'redirect_login'
         config.failure_app = self
       end
+      self.use Rack::Session::Cookie, :expire_after => 60*60*24*365, :secret => config[:session_secret]
       self.new(config)
     end
 
