@@ -127,7 +127,7 @@ module Firefly
     end
 
     get '/login' do
-      haml :login
+      haml @config[:authentication]['login_form'].to_sym
     end
 
     # GET /add?url=http://ariejan.net&api_key=test

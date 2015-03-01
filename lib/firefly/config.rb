@@ -12,7 +12,8 @@ module Firefly
       recent_urls: 25,
       authentication: {
         strategy: 'api_key',
-        api_key: 'test'
+        api_key: 'test',
+        login_form: 'login'
       }
     }
 

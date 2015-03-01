@@ -4,3 +4,4 @@ firefly:
   authentication:
     strategy: 'api_key'
     api_key: 'test#!'
+    login_form: 'login'
