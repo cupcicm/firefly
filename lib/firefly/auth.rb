@@ -1,3 +1,4 @@
+require 'ostruct'
 require 'warden'
 require 'warden/ldap'
 
@@ -11,7 +12,8 @@ def register_api_key_strategy(api_key)
       if params['api_key'] == api_key
         # There is no notion of a user in this scheme.
         # A 'default user' is used to login everybody.
-        success!('default_user')
+        default_user = OpenStruct.new :username => 'default user'
+        success!(default_user)
       else
         fail!("Wrong api key")
       end
