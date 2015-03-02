@@ -2,9 +2,10 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe "Url" do
 
-  def shorten(url = nil)
+  def shorten(url = nil, user = nil)
     url ||= "http://example.com/"
-    Firefly::Url.shorten(url)
+    user ||= "user"
+    Firefly::Url.shorten(url, user)
   end
 
   describe "shortening" do
@@ -104,6 +105,20 @@ describe "Url" do
           shorten(url).should be_nil
         }.should raise_error(Firefly::InvalidUrlError)
       end
+    end
+  end
+
+  describe "multi-user" do
+    it "should store user correctly" do
+      url = shorten("http://example.com", "some_user")
+      url.user.should eql("some_user")
+    end
+
+    it "should be impossible to steal url from another user" do
+      url = shorten("http://example.com", "some_user")
+      lambda {
+        shorten("http://example.com/", "some_other_user")
+      }.should_not change(Firefly::Url, :count)
     end
   end
 

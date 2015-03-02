@@ -11,7 +11,7 @@ module Firefly
     end
 
     # Shorten a long_url and return a new FireFly::Url
-    def self.shorten(long_url, code = nil)
+    def self.shorten(long_url, user, code = nil)
       code = nil if code !~ /\S/
 
       raise Firefly::InvalidUrlError.new unless valid_url?(long_url)
@@ -25,6 +25,7 @@ module Firefly
 
       code ||= get_me_a_code
       the_url.update_attribute(:code, code)
+      the_url.update_attribute(:user, user)
       the_url
     end
 

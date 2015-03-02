@@ -62,11 +62,11 @@ module Firefly
         "http://#{config[:hostname]}/#{url.code}"
       end
 
-      def generate_short_url(url = nil, requested_code = nil)
+      def generate_short_url(url, user, requested_code = nil)
         code, result = nil, nil
 
         begin
-          ff_url  = Firefly::Url.shorten(url, requested_code)
+          ff_url  = Firefly::Url.shorten(url, user, requested_code)
           code, result = ff_url.code, "http://#{config[:hostname]}/#{ff_url.code}"
         rescue Firefly::InvalidUrlError
           code, result = nil, "ERROR: The URL you posted is invalid."
@@ -133,10 +133,11 @@ module Firefly
     # Returns the shortened URL
     api_add = lambda {
       env['warden'].authenticate!
+      user = env['warden'].user.username
 
       @url            = params[:url]
       @requested_code = params[:short]
-      @code, @result  = generate_short_url(@url, @requested_code)
+      @code, @result  = generate_short_url(@url, user, @requested_code)
       invalid = @code.nil?
 
       if params[:visual]
