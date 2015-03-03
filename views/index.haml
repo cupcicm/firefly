@@ -25,12 +25,14 @@
     %tr
       %td.label Short URL
       %td.label Full URL
+      %td.label Created by
       %td.label Clicks
       %td.label Shortened at
     %tr.highlighted
       %td.value
         %input{ type: "text", value: short_url(@highlight), class: 'short_url', size: 21 }
       %td.value.fill <a href="#{@highlight.url}">#{truncate @highlight.url, 130}</a>
+      %td.value.center= @highlight.user
       %td.value.center= @highlight.clicks
       %td.value= @highlight.created_at.strftime("%Y-%m-%d %H:%M")
 

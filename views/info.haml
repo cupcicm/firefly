@@ -7,6 +7,7 @@
   %tr
     %td.label Short URL
     %td.label Full URL
+    %td.label Created by
     %td.label Clicks
     %td.label Shortened at
 
@@ -14,6 +15,7 @@
     %td.value
       %input{ type: "text", value: short_url(@url), class: 'short_url', size: 21 }
     %td.value.fill <a href="#{@url.url}">#{@url.url}</a>
+    %td.value.center= @url.user
     %td.value.center= @url.clicks
     %td.value= @url.created_at.to_time.strftime("%Y-%m-%d %H:%M")
 
