@@ -89,7 +89,7 @@ module Firefly
     before do
       @config        = config
       @highlight     = nil
-      @title         = "Firefly at http://#{@config[:hostname]}"
+      @title         = "Url shortener (http://#{@config[:hostname]})"
     end
 
     get '/' do
