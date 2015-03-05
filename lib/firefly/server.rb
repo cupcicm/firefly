@@ -149,6 +149,21 @@ module Firefly
       end
     }
 
+    # GET /delete?code=code&api_key=test
+    get '/api/delete/:code' do
+      env['warden'].authenticate!
+      user = env['warden'].user.username
+
+      @requested_code = params[:code]
+      url = Firefly::Url.where(code: params[:code]).first
+      valid = !url.nil?
+      authorized = valid && url.user == user
+      # head(422) if invalid
+      status 403 if not authorized
+      status 422 if not valid
+      url.destroy if valid and authorized
+    end
+
     get '/api/add', &api_add
     post '/api/add', &api_add
 

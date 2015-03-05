@@ -146,6 +146,29 @@ describe "API" do
       last_response.should be_ok
       last_request.url.should include '/login'
     end
+
+    it "should delete Urls" do
+      lambda {
+        get '/api/delete/alpha', api_key: "test"
+      }.should change(Firefly::Url, :count).by(-1)
+      last_response.should be_ok
+    end
+
+    it "should not delete other user's Urls" do
+      @url = Firefly::Url.create(url: 'http://example.com/1234', code: 'beta',
+                                 user:'somebody else', clicks: 69, created_at: @created_at)
+      lambda {
+        get '/api/delete/beta', api_key: "test"
+      }.should change(Firefly::Url, :count).by(0)
+      last_response.status.should eql(403)
+    end
+
+    it "should get HEAD when asking for invalid code" do
+      lambda {
+        get '/api/delete/I_dont_exist', api_key: "test"
+      }.should change(Firefly::Url, :count).by(0)
+      last_response.status.should eql(422)
+    end
   end
 
   describe "api key" do
